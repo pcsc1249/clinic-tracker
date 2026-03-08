@@ -88,7 +88,26 @@ tr:nth-child(even){background:rgba(255,255,255,.012)}
 <!-- Loading screen -->
 <div class="load-screen" id="loadScreen"><div><div style="font-size:28px;margin-bottom:8px">⏳</div><div style="font-size:14px;font-weight:600">Loading shared data...</div></div></div>
 
-<!-- No setup needed - backend URL is built in -->
+<!-- Setup overlay (shown if no API URL configured) -->
+<div class="setup-overlay hid" id="setupOverlay">
+  <div class="setup-box">
+    <h2>🔗 Connect to Shared Backend</h2>
+    <p>This dashboard needs a Google Apps Script URL to store shared data that everyone on your team can see. This is a one-time setup.</p>
+    <div class="steps">
+      <strong>1.</strong> Create a new Google Sheet<br>
+      <strong>2.</strong> Go to Extensions → Apps Script<br>
+      <strong>3.</strong> Paste the code from <strong>google-apps-script.js</strong> (provided separately)<br>
+      <strong>4.</strong> Click Deploy → New deployment → Web app<br>
+      <strong>5.</strong> Set "Who has access" to <strong>Anyone</strong><br>
+      <strong>6.</strong> Copy the Web App URL and paste it below
+    </div>
+    <input type="text" id="apiUrlInput" placeholder="Paste your Google Apps Script Web App URL here...">
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-p" onclick="saveApiUrl()" style="flex:1">Connect & Start</button>
+    </div>
+    <p style="margin-top:12px;font-size:11px;color:var(--tD)">The URL looks like: https://script.google.com/macros/s/XXXXX/exec</p>
+  </div>
+</div>
 
 <div class="hdr">
   <div class="hdr-l">
@@ -100,6 +119,7 @@ tr:nth-child(even){background:rgba(255,255,255,.012)}
   </div>
   <div class="hdr-r">
     <span id="syncStatus"></span>
+    <button class="btn-o hid" id="bCfg" onclick="showSetup()">🔗</button>
     <button class="btn-o hid" id="bClr" onclick="toggleClear()">⚙</button>
     <button class="btn-o hid" id="bExp" onclick="exportCSV()">↓ Export</button>
     <label class="btn btn-p">+ Upload CSV<input type="file" accept=".csv,.tsv,.txt" onchange="handleFile(this.files[0])"></label>
@@ -129,7 +149,8 @@ tr:nth-child(even){background:rgba(255,255,255,.012)}
 
 <script>
 /* ═══ CONFIG ═══ */
-const API_URL = "https://script.google.com/macros/s/AKfycbxdARglfRGpsX1UJYWzka1kWbrVxu5N1Ow0iF1UJgYYo5j2anayNchAHTRxcQkZs7GP/exec";
+const CFG_KEY = "clinic_tracker_api_url";
+let API_URL = localStorage.getItem(CFG_KEY) || "";
 
 /* ═══ STATE ═══ */
 let S = { todayData:[], todayDate:"", parseInfo:null, view:"today", selMonth:"", selYear:"", allDays:{}, dayIndex:[], showClear:false };
@@ -237,6 +258,8 @@ function showErr(m){const el=document.getElementById("err");el.textContent="⚠ 
 function hideErr(){document.getElementById("err").classList.add("hid")}
 function toggleClear(){S.showClear=!S.showClear;document.getElementById("clrBar").classList.toggle("hid",!S.showClear)}
 function clearAll(){clearAllCloud()}
+function showSetup(){document.getElementById("setupOverlay").classList.remove("hid");document.getElementById("apiUrlInput").value=API_URL}
+function saveApiUrl(){const u=document.getElementById("apiUrlInput").value.trim();if(!u){alert("Please paste a URL");return}API_URL=u;localStorage.setItem(CFG_KEY,u);document.getElementById("setupOverlay").classList.add("hid");init();}
 function pct(n,t){return t>0?(n/t*100).toFixed(1):"0.0"}
 function iC(r){return r>25?"var(--rd)":r>12?"var(--or)":"var(--ac)"}
 function iBg(r){return r>25?"var(--rdS)":r>12?"var(--orS)":"var(--acS)"}
@@ -287,6 +310,7 @@ function render(){
   document.getElementById("dash").classList.toggle("hid",!has);
   document.getElementById("bExp").classList.toggle("hid",!has);
   document.getElementById("bClr").classList.toggle("hid",idx.length===0);
+  document.getElementById("bCfg").classList.remove("hid");
   document.getElementById("hSub").textContent=has?`${idx.length} day${idx.length!==1?"s":""} tracked · Shared`:"Upload your Tebra CSV";
   document.getElementById("ftDays").textContent=idx.length;
 
@@ -326,9 +350,10 @@ function render(){
 
 /* ═══ INIT ═══ */
 async function init(){
+  if(!API_URL){document.getElementById("loadScreen").classList.add("hid");document.getElementById("setupOverlay").classList.remove("hid");document.getElementById("empty").classList.remove("hid");return}
   const ok=await loadFromCloud();
   document.getElementById("loadScreen").classList.add("hid");
-  if(!ok){showErr("Could not connect to shared backend. Please check your internet connection and try refreshing.")}
+  if(!ok){showErr("Could not connect to Google Sheets backend. Click 🔗 to reconfigure.")}
   render();
 }
 init();
