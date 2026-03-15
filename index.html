@@ -159,7 +159,7 @@ async function deleteSelected(){
   const allSelected=keys.length===S.dayIndex.length;
   if(!confirm(allSelected?"Delete ALL "+keys.length+" days of data? This cannot be undone.":"Delete "+keys.length+" day(s)?\n\n"+keys.join(", ")+"\n\nThis cannot be undone."))return;
   try{
-    sync("loading","Deleting...");
+    sy("loading","Deleting...");
     if(allSelected){
       await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action:"clearAll"}),redirect:"follow"});
       S.allDays={};S.dayIndex=[];S.todayData=[];S.parseInfo=null;document.getElementById("mp").classList.add("hid");
@@ -171,8 +171,8 @@ async function deleteSelected(){
       }
       if(S.todayData.length&&keys.includes(S.todayDate)){S.todayData=[];S.parseInfo=null;document.getElementById("mp").classList.add("hid")}
     }
-    hideClear();sync("ok","Deleted ✓");render();
-  }catch(e){sync("error","Delete failed")}
+    hideClear();sy("ok","Deleted ✓");render();
+  }catch(e){sy("err","Delete failed")}
 }
 function mkGT(groups,label){const sorted=Object.entries(groups).sort(function(a,b){return b[1].total-a[1].total});let h='<div style="overflow-x:auto"><table><thead><tr><th style="text-align:left">'+label+'</th><th>Total</th><th>Out</th><th>NS</th><th>Canc</th><th>Resch</th><th>NS%</th><th>Canc%</th><th>Issue%</th></tr></thead><tbody>';sorted.forEach(function(e){const n=e[0],g=e[1];const np=g.total>0?g.ns/g.total*100:0,cp=g.total>0?g.ca/g.total*100:0,ip=g.total>0?(g.ns+g.ca+g.rs)/g.total*100:0;h+='<tr><td title="'+n+'">'+spl(n)+'</td><td style="font-weight:800;color:var(--tx)">'+g.total+'</td><td style="color:'+(g.co?"var(--ac)":"var(--tD)")+'">'+( g.co||"\u2014")+'</td><td style="color:'+(g.ns?"var(--rd)":"var(--tD)")+';font-weight:700">'+(g.ns||"\u2014")+'</td><td style="color:'+(g.ca?"var(--or)":"var(--tD)")+'">'+(g.ca||"\u2014")+'</td><td style="color:'+(g.rs?"var(--bl)":"var(--tD)")+'">'+(g.rs||"\u2014")+'</td><td style="font-weight:800;color:'+nC(np)+'">'+np.toFixed(1)+'%</td><td style="font-weight:700;color:'+(cp>15?"var(--or)":"var(--tM)")+'">'+cp.toFixed(1)+'%</td><td style="font-weight:800;color:'+iC(ip)+'">'+ip.toFixed(1)+"%</td></tr>";});return h+"</tbody></table></div>";}
 function getWeekKey(ds){const d=new Date(ds+"T00:00:00");const day=d.getDay();const diff=d.getDate()-day+(day===0?-6:1);const mon=new Date(d);mon.setDate(diff);return mon.getFullYear()+"-"+String(mon.getMonth()+1).padStart(2,"0")+"-"+String(mon.getDate()).padStart(2,"0")}
