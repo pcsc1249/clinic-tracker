@@ -86,7 +86,7 @@ tr:nth-child(even){background:rgba(255,255,255,.012)}
 <div class="empty hid" id="empty" ondragover="event.preventDefault();this.classList.add('ov')" ondragleave="this.classList.remove('ov')" ondrop="event.preventDefault();this.classList.remove('ov');handleFile(event.dataTransfer.files[0])" onclick="document.querySelector('input[type=file]').click()"><div style="font-size:52px;margin-bottom:16px;opacity:.5">📊</div><h2>Drop your Tebra CSV here</h2><p><strong style="color:var(--ac)">Shared dashboard</strong> — upload daily to track no-shows, cancellations & rescheduled with charts and trends.</p><div class="ec"><span>Status</span><span>Provider</span><span>Appt Reason</span><span>Time</span><span>Insurance</span></div></div>
 <div class="hid" id="dash"><div class="tabs" id="tabs"></div><div id="content"></div><div class="ft">Shared data · <span id="ftD">0</span> days saved · Upload daily to build trends</div></div></div>
 <script>
-const API_URL="https://script.google.com/macros/s/AKfycbzRE1ZG_ShHwdodbHBvL1jPmWXI8qKDkG1FgEHUiy71XHY6QYGbl5pMgcHbgmQQvv4lAw/exec";
+const API_URL="https://script.google.com/macros/s/AKfycbwIL4kpc1hIJh6Aaj7Kj8SMyEgoelDO4psydIQEd2Tmts2rYKodpw4T1t6hN0L_zxiOJw/exec";
 const SP={id:{l:"ID",c:"#F87171"},endo:{l:"Endo",c:"#FBBF24"},rheum:{l:"Rheum",c:"#F472B6"},tcm:{l:"TCM",c:"#C084FC"},psych:{l:"Psych",c:"#A78BFA"},pulmo:{l:"Pulmo",c:"#60A5FA"},cardio:{l:"Cardio",c:"#EF4444"},neuro:{l:"Neuro",c:"#2DD4BF"},gi:{l:"GI",c:"#FCD34D"},derm:{l:"Derm",c:"#6EE7B7"},pcp:{l:"PCP",c:"#2DD4A8"},nephro:{l:"Nephro",c:"#93C5FD"},heme:{l:"Heme/Onc",c:"#FDA4AF"},other:{l:"Other",c:"#484F58"}};
 let S={todayData:[],todayDate:"",parseInfo:null,view:"today",selMonth:"",selYear:"",allDays:{},dayIndex:[]};
 function spl(k){return SP[k]?.l||k}
