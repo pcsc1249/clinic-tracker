@@ -201,4 +201,29 @@ function rOv(sum,label,trendData){
 
 function render(){
   hideErr();const idx=S.dayIndex;const has=idx.length>0||S.todayData.length>0;
-  document.get
+  document.getElementById("empty").classList.toggle("hid",has);document.getElementById("dash").classList.toggle("hid",!has);document.getElementById("bExp").classList.toggle("hid",!has);document.getElementById("bClr").classList.toggle("hid",!has);
+  document.getElementById("hSub").textContent=has?idx.length+" day"+(idx.length!==1?"s":"")+" tracked \u00B7 Shared":"Upload your Tebra CSV";document.getElementById("ftD").textContent=idx.length;
+  if(S.parseInfo){const el=document.getElementById("mp");el.classList.remove("hid");let h="<b>Mapped:</b> ";Object.entries(S.parseInfo.mapped).filter(function(e){return e[1]}).forEach(function(e){h+="<span>"+e[0]+": <strong>"+e[1]+"</strong></span> "});h+='<span class="pill" style="color:var(--ac);background:var(--acS)">\u2713 Saved</span>';el.innerHTML=h;}
+  if(!has)return;
+  if(!S.selMonth&&idx.length)S.selMonth=[...new Set(idx.map(function(d){return d.substring(0,7)}))].sort().reverse()[0];
+  if(!S.selYear&&idx.length)S.selYear=[...new Set(idx.map(function(d){return d.substring(0,4)}))].sort().reverse()[0];
+  const mD=idx.filter(function(d){return d.startsWith(S.selMonth)}).map(function(k){return S.allDays[k]}).filter(Boolean);
+  const yD=idx.filter(function(d){return d.startsWith(S.selYear)}).map(function(k){return S.allDays[k]}).filter(Boolean);
+  const months=[...new Set(idx.map(function(d){return d.substring(0,7)}))].sort().reverse();
+  const years=[...new Set(idx.map(function(d){return d.substring(0,4)}))].sort().reverse();
+  let th=[{id:"today",l:"Today",c:S.todayData.length},{id:"weekly",l:"Weekly",c:getWeeklyData().length},{id:"monthly",l:"Monthly",c:mD.length},{id:"yearly",l:"Yearly",c:yD.length},{id:"history",l:"All Days",c:idx.length}].map(function(t){return'<button class="tab '+(S.view===t.id?"on":"")+'" onclick="S.view=\''+t.id+"';render()\">"+t.l+' <span class="bg">'+t.c+"</span></button>"}).join("");
+  if(S.view==="monthly"&&months.length)th+='<div class="tab-r"><select onchange="S.selMonth=this.value;render()">'+months.map(function(m){return'<option value="'+m+'"'+(m===S.selMonth?" selected":"")+">"+m+"</option>"}).join("")+"</select></div>";
+  if(S.view==="yearly"&&years.length)th+='<div class="tab-r"><select onchange="S.selYear=this.value;render()">'+years.map(function(y){return'<option value="'+y+'"'+(y===S.selYear?" selected":"")+">"+y+"</option>"}).join("")+"</select></div>";
+  document.getElementById("tabs").innerHTML=th;
+  let html="";
+  if(S.view==="today"){if(S.todayData.length)html=rOv(buildSum(S.todayData,S.todayDate||todayKey()),"Daily",null);else html='<div style="text-align:center;padding:40px;color:var(--tM)"><div style="font-size:32px;margin-bottom:12px;opacity:.4">\uD83D\uDCCB</div><div style="font-size:16px;font-weight:700;margin-bottom:6px">No CSV uploaded this session</div><div style="font-size:13px">Upload a Tebra CSV. Check Weekly/Monthly/Yearly for historical data.</div></div>';}
+  else if(S.view==="weekly"){const weeks=getWeeklyData();if(weeks.length){const mg=mergeSum(weeks);mg.dayCount=S.dayIndex.length;html=rOv(mg,"Weekly",weeks);}else html='<div style="text-align:center;padding:40px;color:var(--tM)">No weekly data yet</div>';}
+  else if(S.view==="monthly"){if(mD.length){const tr=idx.filter(function(d){return d.startsWith(S.selMonth)}).map(function(k){return S.allDays[k]}).filter(Boolean);html=rOv(mergeSum(mD),"Monthly ("+S.selMonth+")",tr);}else html='<div style="text-align:center;padding:40px;color:var(--tM)">No data for '+S.selMonth+"</div>";}
+  else if(S.view==="yearly"){if(yD.length){const mm={};idx.filter(function(d){return d.startsWith(S.selYear)}).forEach(function(d){const mo=d.substring(0,7);if(!mm[mo])mm[mo]=[];if(S.allDays[d])mm[mo].push(S.allDays[d])});const tr=Object.entries(mm).sort().map(function(e){return{date:e[0],...mergeSum(e[1])}});html=rOv(mergeSum(yD),"Yearly ("+S.selYear+")",tr);}else html='<div style="text-align:center;padding:40px;color:var(--tM)">No data for '+S.selYear+"</div>";}
+  else if(S.view==="history"){html='<div class="sec"><div class="sec-t">All Days ('+idx.length+')</div><div style="overflow-x:auto"><table><thead><tr><th style="text-align:left">Date</th><th>Visits</th><th>Out</th><th>NS</th><th>Canc</th><th>Resch</th><th>NS%</th><th>Issue%</th></tr></thead><tbody>';[...idx].reverse().forEach(function(k){const d=S.allDays[k];if(!d)return;const np=d.total>0?d.ns/d.total*100:0;const ip=d.total>0?(d.ns+d.ca+d.rs)/d.total*100:0;html+='<tr><td style="font-weight:800">'+k+'</td><td style="font-weight:800;color:var(--tx)">'+d.total+'</td><td style="color:var(--ac)">'+d.co+'</td><td style="color:'+(d.ns?"var(--rd)":"var(--tD)")+';font-weight:700">'+(d.ns||"\u2014")+'</td><td style="color:'+(d.ca?"var(--or)":"var(--tD)")+'">'+(d.ca||"\u2014")+'</td><td style="color:'+(d.rs?"var(--bl)":"var(--tD)")+'">'+(d.rs||"\u2014")+'</td><td style="font-weight:800;color:'+nC(np)+'">'+np.toFixed(1)+'%</td><td style="font-weight:800;color:'+iC(ip)+'">'+ip.toFixed(1)+"%</td></tr>"});html+="</tbody></table></div></div>";}
+  document.getElementById("content").innerHTML=html;}
+async function init(){const ok=await loadCloud();document.getElementById("ld").classList.add("hid");if(!ok)showErr("Could not connect. Check internet and refresh.");render();}
+init();
+</script>
+</body>
+</html>
